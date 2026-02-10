@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { POData, LineItem } from './types.ts';
 import { generateWordDoc } from './services/docGenerator.ts';
 
@@ -36,7 +36,7 @@ const initialPOData: POData = {
   reference: {
     quotationNo: '',
     date: '',
-    amount: '',
+    amount: '0',
   },
   items: [
     { id: '1', description: '', qty: 0, basicCost: 0, gst: 0, totalCost: 0 }
@@ -50,6 +50,20 @@ const initialPOData: POData = {
 
 const App: React.FC = () => {
   const [data, setData] = useState<POData>(initialPOData);
+
+  // Calculate total whenever items change
+  const totalPayable = data.items.reduce((sum, item) => sum + Number(item.totalCost), 0);
+
+  // Sync totalPayable to reference.amount automatically
+  useEffect(() => {
+    setData(prev => ({
+      ...prev,
+      reference: {
+        ...prev.reference,
+        amount: totalPayable.toFixed(2)
+      }
+    }));
+  }, [totalPayable]);
 
   const handleChange = (section: keyof POData, field: string, value: string) => {
     setData(prev => ({
@@ -115,8 +129,6 @@ const App: React.FC = () => {
     }
   };
 
-  const totalPayable = data.items.reduce((sum, item) => sum + Number(item.totalCost), 0);
-
   return (
     <div className="min-h-screen p-4 md:p-8 flex flex-col items-center bg-slate-100">
       <div className="w-full max-w-6xl bg-white shadow-2xl rounded-2xl overflow-hidden border border-gray-200 flex flex-col">
@@ -124,7 +136,7 @@ const App: React.FC = () => {
         {/* Main Header with Logo */}
         <div className="bg-[#8B4513] p-8 md:p-10 text-white shadow-inner relative overflow-hidden">
           <div className="absolute inset-0 bg-black opacity-10 pointer-events-none"></div>
-          <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-8 relative">
+          <div className="max-w-5xl mx-auto flex flex-col items-center gap-6 relative text-center">
             <div className="bg-white p-2 rounded-xl shadow-lg border-2 border-amber-200/20 shrink-0">
               <img 
                 src="https://queens.edu.in/wp-content/uploads/2024/10/QUEENS-Logo-Coloured-1.png" 
@@ -132,9 +144,9 @@ const App: React.FC = () => {
                 className="h-20 md:h-24 w-auto object-contain"
               />
             </div>
-            <div className="text-center md:text-left">
+            <div>
               <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-1 uppercase">Queens' College Indore</h1>
-              <p className="text-lg md:text-xl opacity-80 font-medium tracking-wide">Official Purchase Order Portal</p>
+              <p className="text-lg md:text-xl opacity-80 font-medium tracking-wide">Purchase Order Portal</p>
             </div>
           </div>
         </div>
@@ -167,15 +179,15 @@ const App: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             {/* Vendor/Supplier */}
             <Section title="Vendor / Supplier Details">
-              <InputField label="Company Name" value={data.vendor.companyName} onChange={(v) => handleChange('vendor', 'companyName', v)} />
+              <InputField label="Vendor shop name" value={data.vendor.companyName} onChange={(v) => handleChange('vendor', 'companyName', v)} />
               <InputField label="Contact Person" value={data.vendor.contactPerson} onChange={(v) => handleChange('vendor', 'contactPerson', v)} />
               <InputField label="Full Address" value={data.vendor.address} onChange={(v) => handleChange('vendor', 'address', v)} />
               <InputField label="Email Address" value={data.vendor.email} onChange={(v) => handleChange('vendor', 'email', v)} />
               <InputField label="Contact Phone" value={data.vendor.phone} onChange={(v) => handleChange('vendor', 'phone', v)} />
             </Section>
 
-            {/* Payment Info */}
-            <Section title="Bank & Tax Information">
+            {/* Vendor Bank Details */}
+            <Section title="Vendor bank details">
               <InputField label="Bank Name" value={data.bankDetails.bank} onChange={(v) => handleChange('bankDetails', 'bank', v)} />
               <InputField label="Account Number" value={data.bankDetails.accountNo} onChange={(v) => handleChange('bankDetails', 'accountNo', v)} />
               <InputField label="Branch Name" value={data.bankDetails.branch} onChange={(v) => handleChange('bankDetails', 'branch', v)} />
@@ -192,9 +204,9 @@ const App: React.FC = () => {
               <InputField label="Delivery Address" value={data.buyer.address} onChange={(v) => handleChange('buyer', 'address', v)} />
               <InputField label="Consignee Name" value={data.buyer.contactPerson} onChange={(v) => handleChange('buyer', 'contactPerson', v)} />
               <div className="pt-6 border-t border-gray-100">
-                <h4 className="text-sm font-bold text-gray-800 mb-4">Internal Point of Contact</h4>
-                <InputField label="POC Name" value={data.poc.name} onChange={(v) => handleChange('poc', 'name', v)} />
-                <InputField label="POC Phone" value={data.poc.phone} onChange={(v) => handleChange('poc', 'phone', v)} />
+                <h4 className="text-sm font-bold text-gray-800 mb-4 uppercase tracking-tight">Contact Person details at Delivery address</h4>
+                <InputField label="Name" value={data.poc.name} onChange={(v) => handleChange('poc', 'name', v)} />
+                <InputField label="Contact Number" value={data.poc.phone} onChange={(v) => handleChange('poc', 'phone', v)} />
               </div>
             </Section>
           </div>
@@ -205,7 +217,14 @@ const App: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <InputField label="Quote Reference No." value={data.reference.quotationNo} onChange={(v) => handleChange('reference', 'quotationNo', v)} />
               <InputField label="Quotation Date" type="date" value={data.reference.date} onChange={(v) => handleChange('reference', 'date', v)} />
-              <InputField label="Quoted Total Amount (₹)" value={data.reference.amount} onChange={(v) => handleChange('reference', 'amount', v)} />
+              <div className="group relative">
+                <label className="block text-[10px] font-black text-amber-600 uppercase mb-1.5 tracking-wide">
+                  Quoted Total Amount (₹) - Auto Calculated
+                </label>
+                <div className="w-full border-b border-gray-200 py-2.5 text-lg font-black text-amber-900 bg-transparent">
+                  ₹ {totalPayable.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </div>
+              </div>
             </div>
           </div>
 
