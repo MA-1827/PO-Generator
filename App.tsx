@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { POData, LineItem } from './types.ts';
 import { generateWordDoc } from './services/docGenerator.ts';
@@ -122,11 +121,22 @@ const App: React.FC = () => {
     <div className="min-h-screen p-4 md:p-8 flex flex-col items-center bg-slate-100">
       <div className="w-full max-w-6xl bg-white shadow-2xl rounded-2xl overflow-hidden border border-gray-200 flex flex-col">
         
-        {/* Main Header */}
-        <div className="bg-[#8B4513] p-10 text-white text-center shadow-inner relative overflow-hidden">
+        {/* Main Header with Logo */}
+        <div className="bg-[#8B4513] p-8 md:p-10 text-white shadow-inner relative overflow-hidden">
           <div className="absolute inset-0 bg-black opacity-10 pointer-events-none"></div>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-2 relative uppercase">Queens' College Indore</h1>
-          <p className="text-lg opacity-80 font-medium relative">Official Purchase Order Portal</p>
+          <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-8 relative">
+            <div className="bg-white p-2 rounded-xl shadow-lg border-2 border-amber-200/20 shrink-0">
+              <img 
+                src="https://queens.edu.in/wp-content/uploads/2024/10/QUEENS-Logo-Coloured-1.png" 
+                alt="Queens' College Logo" 
+                className="h-20 md:h-24 w-auto object-contain"
+              />
+            </div>
+            <div className="text-center md:text-left">
+              <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-1 uppercase">Queens' College Indore</h1>
+              <p className="text-lg md:text-xl opacity-80 font-medium tracking-wide">Official Purchase Order Portal</p>
+            </div>
+          </div>
         </div>
 
         <div className="p-6 md:p-12 space-y-12">
